@@ -1,0 +1,26 @@
+(ocamllex
+  (modules lexer json_lexer)
+)
+
+(menhir
+  (modules mfcalc json_parser)
+  (flags -la 2)
+)
+
+(executable
+ (name ni_calc_main)
+ (public_name ni_calc_main)
+ (modules_without_implementation ni_calc_types calc)
+ (modules ni_calc_types expr calc mfcalc lexer ni_calc_main ni_calc_json ni_test_data ni_test_parser json_parser json_lexer json_parser_main)
+ (package ni_calc_main)
+ (libraries 
+   yojson
+   xml-light
+   str)
+)
+ 
+(env
+  (dev
+    (flags (:standard -g -w -26 -w -27 -w -33))
+  )
+)

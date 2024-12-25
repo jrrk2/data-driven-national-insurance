@@ -1,0 +1,29 @@
+(*
+open Ni_calc_json
+
+let formula = "GP - ((LEL × p) / wm)"
+let formula = "(GP - ((ST × p^1) / wm))# - (GP - ((PT × p^1) / wm))#"
+
+let tokens = Lexer.tokenize formula
+let ast = Parser.parse tokens
+
+let variables = ["GP", 1.; "LEL", 2.; "p", 3.0; "wm", 4.0]
+let eval = Evaluator.eval ast variables
+*)
+
+#directory "/Users/jonathan/.opam/4.14.2/lib/yojson";;
+#print_length 1000000;;
+#print_depth 1000000;;
+
+(*
+open Json_parser_main
+
+let json = parse_json_file "nics-specification.json";;
+*)
+
+open Yojson.Basic.Util
+open Json_example;;
+
+let lst=calc_method () |> member "steps" |> to_list ;;
+let step n = List.nth lst n;;
+let itm n = steprec (step n);;

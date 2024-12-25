@@ -1,0 +1,366 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": ["version", "effectiveDate", "issueDate", "calculationFormulae", "earningsLimits", "roundingRules"],
+    "properties": {
+        "version": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{4}$",
+            "description": "Tax year in format YYYY-YYYY"
+        },
+        "effectiveDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Date in YYYY-MM-DD format"
+        },
+        "issueDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}$",
+            "description": "Month in YYYY-MM format"
+        },
+        "calculationFormulae": {
+            "type": "object",
+            "required": ["exactPercentageMethod", "directorsNICs", "classOneA"],
+            "properties": {
+                "exactPercentageMethod": {
+                    "type": "object",
+                    "required": ["steps", "employeeNICs", "employerNICs"],
+                    "properties": {
+                        "steps": {
+                            "type": "array",
+                            "minItems": 6,
+                            "maxItems": 6,
+                            "items": {
+                                "type": "object",
+                                "required": ["stepNumber", "name", "equation", "roundingRule"],
+                                "properties": {
+                                    "stepNumber": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 6
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "equation": {
+                                        "type": "string",
+                                        "pattern": "^[()\\w\\s+\\-*/\\u00D7\\u2264\\?:.,<=>\\^]+$"
+                                    },
+                                    "variables": {
+                                        "type": "object",
+                                        "additionalProperties": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "roundingRule": {
+                                        "type": "string",
+                                        "enum": ["p", "p1"]
+                                    }
+                                }
+                            }
+                        },
+                        "employeeNICs": {
+                            "type": "object",
+                            "required": ["categoryRates", "equation", "rounding"],
+                            "properties": {
+                                "categoryRates": {
+                                    "type": "object",
+                                    "required": ["A", "B", "C", "H", "J", "M", "V", "Z"],
+                                    "additionalProperties": {
+                                        "type": "object",
+                                        "required": ["bandD", "bandE", "bandF"],
+                                        "properties": {
+                                            "bandD": {
+                                                "type": "number",
+                                                "minimum": 0,
+                                                "maximum": 1
+                                            },
+                                            "bandE": {
+                                                "type": "number",
+                                                "minimum": 0,
+                                                "maximum": 1
+                                            },
+                                            "bandF": {
+                                                "type": "number",
+                                                "minimum": 0,
+                                                "maximum": 1
+                                            }
+                                        }
+                                    }
+                                },
+                                "equation": {
+                                    "type": "string",
+                                    "pattern": "^[()\\w\\s+\\-*/\\u00D7\\u2264\\?:.,<=>\\^]+$"
+                                },
+                                "rounding": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "employerNICs": {
+                            "type": "object",
+                            "required": ["categoryRates", "equation", "rounding"],
+                            "properties": {
+                                "categoryRates": {
+                                    "type": "object",
+                                    "required": ["A", "B", "C", "H", "J", "M", "V", "Z"],
+                                    "additionalProperties": {
+                                        "type": "object",
+                                        "required": ["bandD", "bandE", "bandF"],
+                                        "properties": {
+                                            "bandD": {
+                                                "type": "number",
+                                                "minimum": 0,
+                                                "maximum": 1
+                                            },
+                                            "bandE": {
+                                                "type": "number",
+                                                "minimum": 0,
+                                                "maximum": 1
+                                            },
+                                            "bandF": {
+                                                "type": "number",
+                                                "minimum": 0,
+                                                "maximum": 1
+                                            }
+                                        }
+                                    }
+                                },
+                                "equation": {
+                                    "type": "string",
+                                    "pattern": "^[()\\w\\s+\\-*/\\u00D7\\u2264\\?:.,<=>\\^]+$"
+                                },
+                                "rounding": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "directorsNICs": {
+                    "type": "object",
+                    "required": ["calculationPeriod", "proRataCalculation", "steps", "employeeNICs", "employerNICs"],
+                    "properties": {
+                        "calculationPeriod": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "proRataCalculation": {
+                            "type": "object",
+                            "required": ["description", "formula", "rounding"],
+                            "properties": {
+                                "description": {
+                                    "type": "string"
+                                },
+                                "formula": {
+                                    "type": "object",
+                                    "required": ["LEL", "ST", "PT", "FUST", "IZUST", "UEL"],
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                },
+                                "rounding": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "steps": {
+                            "type": "array",
+                            "minItems": 6,
+                            "maxItems": 6,
+                            "items": {
+                                "type": "object",
+                                "required": ["stepNumber", "name", "equation"],
+                                "properties": {
+                                    "stepNumber": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 6
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "equation": {
+                                        "type": "string",
+                                        "pattern": "^[()\\w\\s+\\-*/\\u00D7\\u2264\\?:.,<=>\\^]+$"
+                                    }
+                                }
+                            }
+                        },
+                        "employeeNICs": {
+                            "type": "object",
+                            "required": ["equation", "rounding"],
+                            "properties": {
+                                "equation": {
+                                    "type": "string",
+                                    "pattern": "^[()\\w\\s+\\-*/\\u00D7\\u2264\\?:.,<=>\\^]+$"
+                                },
+                                "rounding": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "employerNICs": {
+                            "type": "object",
+                            "required": ["equation", "rounding"],
+                            "properties": {
+                                "equation": {
+                                    "type": "string",
+                                    "pattern": "^[()\\w\\s+\\-*/\\u00D7\\u2264\\?:.,<=>\\^]+$"
+                                },
+                                "rounding": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "classOneA": {
+                    "type": "object",
+                    "required": ["termination", "sportingTestimonial"],
+                    "properties": {
+                        "termination": {
+                            "type": "object",
+                            "required": ["threshold", "rate", "equation", "rounding"],
+                            "properties": {
+                                "threshold": {
+                                    "type": "number"
+                                },
+                                "rate": {
+                                    "type": "number"
+                                },
+                                "equation": {
+                                    "type": "string",
+                                    "pattern": "^[()\\w\\s+\\-*/\\u00D7\\u2264\\?:.,<=>\\^]+$"
+                                },
+                                "rounding": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "sportingTestimonial": {
+                            "type": "object",
+                            "required": ["threshold", "rate", "equation", "rounding"],
+                            "properties": {
+                                "threshold": {
+                                    "type": "number"
+                                },
+                                "rate": {
+                                    "type": "number"
+                                },
+                                "equation": {
+                                    "type": "string",
+                                    "pattern": "^[()\\w\\s+\\-*/\\u00D7\\u2264\\?:.,<=>\\^]+$"
+                                },
+                                "rounding": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "earningsLimits": {
+            "type": "object",
+            "required": ["weekly", "2Weekly", "4Weekly", "monthly", "annual"],
+            "properties": {
+                "weekly": {
+                    "$ref": "#/definitions/limits"
+                },
+                "2Weekly": {
+                    "$ref": "#/definitions/limits"
+                },
+                "4Weekly": {
+                    "$ref": "#/definitions/limits"
+                },
+                "monthly": {
+                    "$ref": "#/definitions/limits"
+                },
+                "annual": {
+                    "$ref": "#/definitions/limits"
+                }
+            }
+        },
+        "roundingRules": {
+            "type": "object",
+            "required": ["p", "p1", "pennies"],
+            "properties": {
+                "p": {
+                    "type": "string"
+                },
+                "p1": {
+                    "type": "object",
+                    "required": ["period1", "periodGreaterThan1"],
+                    "properties": {
+                        "period1": {
+                            "type": "string"
+                        },
+                        "periodGreaterThan1": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "pennies": {
+                    "type": "object",
+                    "required": ["rule", "details"],
+                    "properties": {
+                        "rule": {
+                            "type": "string"
+                        },
+                        "details": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "limits": {
+            "type": "object",
+            "required": [
+                "LEL",
+                "ST",
+                "PT",
+                "FUST",
+                "IZUST",
+                "UEL",
+                "UST",
+                "AUST",
+                "VUST"
+            ],
+            "properties": {
+                "LEL": {
+                    "type": "number"
+                },
+                "ST": {
+                    "type": "number"
+                },
+                "PT": {
+                    "type": "number"
+                },
+                "FUST": {
+                    "type": "number"
+                },
+                "IZUST": {
+                    "type": "number"
+                },
+                "UEL": {
+                    "type": "number"
+                },
+                "UST": {
+                    "type": "number"
+                },
+                "AUST": {
+                    "type": "number"
+                },
+                "VUST": {
+                    "type": "number"
+                }
+            }
+        }
+    }
+}

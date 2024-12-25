@@ -1,0 +1,9 @@
+_build/
+archive/
+bad/
+json_example
+json_parser_main
+*junk*
+new/
+old/
+*~

@@ -1,0 +1,277 @@
+{
+    "version": "2024-2025",
+    "effectiveDate": "2024-04-06",
+    "issueDate": "2024-03",
+    "roundingFunctions": {
+        "roundP": "(x) => Math.ceil(x)",
+        "roundP1": "(x, period) => period === 1 ? Math.round(x) : Math.ceil(x)",
+        "roundPennies": "(x) => { const pennies = x * 100; return (pennies % 1 <= 0.5) ? Math.floor(pennies)/100 : Math.ceil(pennies)/100; }"
+    },
+    "calculationFormulae": {
+        "exactPercentageMethod": {
+            "steps": [
+                {
+                    "stepNumber": 1,
+                    "name": "Earnings up to and including LEL",
+                    "equation": "let gpLEL = roundP(GP - ((LEL × p) / wm)); let step1 = gpLEL; step1",
+                    "roundingRule": "p1"
+                },
+                {
+                    "stepNumber": 2,
+                    "name": "Earnings above LEL up to and including ST",
+                    "equation": "let gpLEL = roundP(GP - ((LEL × p) / wm)); let gpST = roundP1(GP - ((ST × p) / wm), p); let step2 = (GP > LEL && GP > ST ? max(0, gpLEL - max(0, gpST)) : 0.0); step2",
+                    "roundingRule": "p1"
+                },
+                {
+                    "stepNumber": 3,
+                    "name": "Earnings above ST up to and including PT",
+                    "equation": "let gpST = roundP1(GP - ((ST × p) / wm), p); let gpPT = roundP1(GP - ((PT × p) / wm), p); let rounded = roundP1(GP, p); let stToPt = (rounded > ST && rounded > PT ? max(0, gpST - max(0, gpPT)) : 0.0); step3 = stToPt",
+                    "roundingRule": "p1"
+                },
+                {
+                    "stepNumber": 4, 
+                    "name": "Earnings above PT up to and including FUST/IZUST",
+                    "equation": "let gpPT = roundP1(GP - ((PT × p) / wm), p); let gpFUST = roundP1(GP - ((FUST × p) / wm), p); let rounded = roundP1(GP, p); let ptEarnings = (rounded > PT ? max(0, gpPT) : 0.0); let step4 = (rounded <= FUST ? max(0, ptEarnings - max(0, gpFUST)) : ptEarnings); step4",
+		    "roundingRule": "p1"
+                },
+                {
+                    "stepNumber": 5,
+                    "name": "Earnings above FUST/IZUST up to and including UEL",
+                    "equation": "let gpFUST = roundP1(GP - ((FUST × p) / wm), p); let gpUEL = roundP1(GP - ((UEL × p) / wm), p); let rounded = roundP1(GP, p); let fustEarnings = max(0, gpFUST); let step5 = (rounded >= UEL ? fustEarnings : max(0, fustEarnings - max(0, gpUEL))); step5",
+		    "roundingRule": "p1"
+                },
+                {
+                    "stepNumber": 6,
+                    "name": "Earnings above UEL",
+                    "equation": "let gpUEL = roundP1(GP - ((UEL × p) / wm), p); let rounded = roundP1(GP, p); let step6 = (rounded >= UEL ? gpUEL : 0.0); step6",
+                    "roundingRule": "p1"
+                }
+            ],
+            "employeeNICs": {
+                "categoryRates": {
+                    "A": {
+                        "bandD": 0.12,
+                        "bandE": 0.12,
+                        "bandF": 0.02
+                    },
+                    "B": {
+                        "bandD": 0.0585,
+                        "bandE": 0.0585,
+                        "bandF": 0.02
+                    },
+                    "C": {
+                        "bandD": 0.0,
+                        "bandE": 0.0,
+                        "bandF": 0.0
+                    },
+                    "H": {
+                        "bandD": 0.08,
+                        "bandE": 0.08,
+                        "bandF": 0.02
+                    },
+                    "J": {
+                        "bandD": 0.02,
+                        "bandE": 0.02,
+                        "bandF": 0.02
+                    },
+                    "M": {
+                        "bandD": 0.08,
+                        "bandE": 0.08,
+                        "bandF": 0.02
+                    },
+		    "V": {
+			"bandD": 0.08,
+			"bandE": 0.08,
+			"bandF": 0.02
+		    }
+                },
+                "equation": "let isAboveST = rounded > ST; let bandD = isAboveST ? (max(0, step3 × employeeBandD) + max(0, step4 × employeeBandD)) : 0; let bandE = isAboveST ? max(0, step5 × employeeBandE) : 0; let bandF = isAboveST ? max(0, step6 × employeeBandF) : 0; let employeeNICs = roundPennies(bandD) + roundPennies(bandE) + roundPennies(bandF); employeeNICs"
+            },
+            "employerNICs": {
+                "categoryRates": {
+                    "A": {
+                        "bandD": 0.138,
+                        "bandE": 0.138,
+                        "bandF": 0.138
+                    },
+                    "B": {
+                        "bandD": 0.138,
+                        "bandE": 0.138,
+                        "bandF": 0.138
+                    },
+                    "C": {
+                        "bandD": 0.138,
+                        "bandE": 0.138,
+                        "bandF": 0.138
+                    },
+                    "H": {
+                        "bandD": 0.0,
+                        "bandE": 0.0,
+                        "bandF": 0.138
+                    },
+                    "J": {
+                        "bandD": 0.138,
+                        "bandE": 0.138,
+                        "bandF": 0.138
+                    },
+                    "M": {
+                        "bandD": 0.0,
+                        "bandE": 0.0,
+                        "bandF": 0.138
+                    },
+                    "V": {
+                        "bandD": 0.0,
+                        "bandE": 0.138,
+                        "bandF": 0.138
+                    },
+                    "Z": {
+                        "bandD": 0.0,
+                        "bandE": 0.138,
+                        "bandF": 0.138
+                    }
+                },
+                "equation": "let isAboveST = rounded > ST; let bandD = isAboveST ? (max(0, step3 × employerBandD) + max(0, step4 × employerBandD)) : 0; let bandE = isAboveST ? max(0, step5 × employerBandE) : 0; let bandF = isAboveST ? max(0, step6 × employerBandF) : 0; let employerNICs = roundPennies(bandD) + roundPennies(bandE) + roundPennies(bandF); employerNICs"
+            }
+        },
+        "directorsNICs": {
+            "calculationPeriod": [
+                "Annual earnings period",
+                "Pro-rata annual earnings period"
+            ],
+            "proRataCalculation": {
+                "description": "Adjust annual thresholds proportionally based on period of directorship",
+                "formula": {
+                    "LEL": "weeklyLEL × weeksInPeriod",
+                    "ST": "(annualST ÷ 52) × weeksInPeriod",
+                    "PT": "(annualPT ÷ 52) × weeksInPeriod",
+                    "FUST": "(annualFUST ÷ 52) × weeksInPeriod",
+                    "IZUST": "(annualIZUST ÷ 52) × weeksInPeriod",
+                    "UEL": "(annualUEL ÷ 52) × weeksInPeriod"
+                },
+                "rounding": "Round up to next whole pound except for one week which rounds to nearest pound"
+            },
+            "steps": [
+                {
+                    "stepNumber": 1,
+                    "name": "Earnings up to and including LEL",
+                    "equation": "GPptd - LEL"
+                },
+                {
+                    "stepNumber": 2,
+                    "name": "Earnings above LEL up to and including ST",
+                    "equation": "(GPptd <= LEL ? 0.0 : max(0, GPptd - LEL) - max(0, GPptd - ST))"
+                },
+                {
+                    "stepNumber": 3,
+                    "name": "Earnings above ST up to and including PT",
+                    "equation": "(GPptd <= ST ? 0.0 : max(0, GPptd - ST) - max(0, GPptd - PT))"
+                },
+                {
+                    "stepNumber": 4,
+                    "name": "Earnings above PT up to and including FUST",
+                    "equation": "(GPptd <= PT ? 0.0 : max(0, GPptd - PT) - max(0, GPptd - FUST))"
+                },
+                {
+                    "stepNumber": 5,
+                    "name": "Earnings above FUST up to and including UEL",
+                    "equation": "(GPptd <= FUST ? 0.0 : max(0, GPptd - FUST) - max(0, GPptd - UEL))"
+                },
+                {
+                    "stepNumber": 6,
+                    "name": "Earnings above UEL",
+                    "equation": "(GPptd <= UEL ? 0.0 : GPptd - UEL)"
+                }
+            ],
+            "employeeNICs": {
+                "equation": "(GPptd <= PT ? 0.0 : ((Step4 + Step5) × employeeBandE) + (Step6 × employeeBandF))",
+                "rounding": "Round to nearest penny"
+            },
+            "employerNICs": {
+                "equation": "let stToPt = roundPennies(step3 × employerBandD); let ptToFust = roundPennies(step4 × employerBandD); let fustToUel = roundPennies(step5 × employerBandE); let overUel = roundPennies(step6 × employerBandF); let employerNICs = stToPt + ptToFust + fustToUel + overUel; employerNICs",
+                "rounding": "Round to nearest penny"
+            }
+        },
+        "classOneA": {
+            "termination": {
+                "threshold": 30000,
+                "rate": 0.138,
+                "equation": "(amount > threshold ? (amount - threshold) × rate : 0.0)",
+                "rounding": "Round to nearest penny"
+            },
+            "sportingTestimonial": {
+                "threshold": 100000,
+                "rate": 0.138,
+                "equation": "(amount > threshold ? (amount - threshold) × rate : 0.0)",
+                "rounding": "Round to nearest penny"
+            }
+        }
+    },
+    "earningsLimits": {
+        "weekly": {
+            "LEL": 123,
+            "ST": 175,
+            "PT": 242,
+            "FUST": 481,
+            "IZUST": 481,
+            "UEL": 967,
+            "UST": 967,
+            "AUST": 967,
+            "VUST": 967
+        },
+        "2Weekly": {
+            "LEL": 246,
+            "ST": 350,
+            "PT": 484,
+            "FUST": 962,
+            "IZUST": 962,
+            "UEL": 1934,
+            "UST": 1934,
+            "AUST": 1934,
+            "VUST": 1934
+        },
+        "4Weekly": {
+            "LEL": 492,
+            "ST": 700,
+            "PT": 967,
+            "FUST": 1924,
+            "IZUST": 1924,
+            "UEL": 3867,
+            "UST": 3867,
+            "AUST": 3867,
+            "VUST": 3867
+        },
+        "monthly": {
+            "LEL": 533,
+            "ST": 758,
+            "PT": 1048,
+            "FUST": 2083,
+            "IZUST": 2083,
+            "UEL": 4189,
+            "UST": 4189,
+            "AUST": 4189,
+            "VUST": 4189
+        },
+        "annual": {
+            "LEL": 6396,
+            "ST": 9100,
+            "PT": 12570,
+            "FUST": 25000,
+            "IZUST": 25000,
+            "UEL": 50270,
+            "UST": 50270,
+            "AUST": 50270,
+            "VUST": 50270
+        }
+    },
+    "roundingRules": {
+        "p": "Always round up to nearest pound",
+        "p1": {
+            "period1": "Round to nearest pound",
+            "periodGreaterThan1": "Round up to nearest pound"
+        },
+        "pennies": {
+            "rule": "Round to nearest penny",
+            "details": "If third decimal place is 5 or less round down, if 6 or more round up"
+        }
+    }
+}
