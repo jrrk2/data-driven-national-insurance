@@ -4,15 +4,14 @@
   open Mfcalc
 }
 
-let digit = ['0'-'9']
+let digit = ['0'-'9']+
+let flt = ['0'-'9']+['.']*['0'-'9']*
 let ident = ['a'-'z' 'A'-'Z']
 let ident_num = ['a'-'z' 'A'-'Z' '0'-'9' '_']
 rule token = parse
   | [' ' '\t' '\n']	{ token lexbuf }
-  | digit+
-  | "." digit+
-  | digit+ "." digit* as num
-		{ NUM (float_of_string num) }
+  | digit as num { NUM num }
+  | flt as num { NUM num }
   | '\195' '\151' { MULTIPLY }
   | '<' '='	{ LTEQ }
   | '>' '='	{ GTEQ }

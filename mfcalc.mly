@@ -1,7 +1,7 @@
 
 %token EOF
 %token LPAREN RPAREN
-%token <float> NUM
+%token <string> NUM
 %token PLUS MINUS MULTIPLY DIVIDE CARET LT LTEQ GTEQ GT AND OR MAX COMMA QUERY COLON EQUALS SEMICOLON LET
 %token <string> VAR
 
@@ -30,7 +30,7 @@ stmt:	  exp { $1 }
         | LET VAR EQUALS exp { Let ($2, $4) }
         | VAR EQUALS VAR { Let ($1, Var $3) }
 	
-exp:	NUM			{ Num $1 }
+exp:	NUM			{ Num (Expr.tonum $1) }
 	| VAR			{ Var $1 }
 	| MAX exp COMMA exp RPAREN	{ Max ($2, $4) }
 	| exp QUERY exp COLON exp	{ Ternary ($1, $3, $5) }

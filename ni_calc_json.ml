@@ -1,5 +1,50 @@
-open Yojson.Basic.Util
+open Yojson.Raw.Util
 open Ni_calc_types
+open Num
+
+let to_numlit = function
+| `Floatlit s -> s
+| `Intlit s -> s
+| `Assoc _ -> failwith ("Assoc: Expected floatlit")
+| `Bool _ -> failwith ("Bool: Expected floatlit")
+| `List _ -> failwith ("List: Expected floatlit")
+| `Null -> failwith ("Null: Expected floatlit")
+| `Stringlit s -> failwith ("Stringlit ("^s^"): Expected floatlit")
+| `Tuple _ -> failwith ("Tuple: Expected floatlit")
+| `Variant _ -> failwith ("Variant: Expected floatlit")
+
+let to_floatlit = function
+| `Floatlit s -> s
+| `Assoc _ -> failwith ("Assoc: Expected floatlit")
+| `Bool _ -> failwith ("Bool: Expected floatlit")
+| `Intlit _ -> failwith ("Intlit: Expected floatlit")
+| `List _ -> failwith ("List: Expected floatlit")
+| `Null -> failwith ("Null: Expected floatlit")
+| `Stringlit s -> failwith ("Stringlit ("^s^"): Expected floatlit")
+| `Tuple _ -> failwith ("Tuple: Expected floatlit")
+| `Variant _ -> failwith ("Variant: Expected floatlit")
+
+let to_stringlit = function
+| `Stringlit s -> s
+| `Assoc _ -> failwith ("Assoc: Expected stringlit")
+| `Bool _ -> failwith ("Bool: Expected stringlit")
+| `Intlit _ -> failwith ("Intlit: Expected stringlit")
+| `List _ -> failwith ("List: Expected stringlit")
+| `Null -> failwith ("Null: Expected stringlit")
+| `Floatlit s -> failwith ("Floatlit ("^s^"): Expected stringlit")
+| `Tuple _ -> failwith ("Tuple: Expected stringlit")
+| `Variant _ -> failwith ("Variant: Expected stringlit")
+
+let to_intlit = function
+| `Intlit s -> int_of_string s
+| `Assoc _ -> failwith ("Assoc: Expected intlit")
+| `Bool _ -> failwith ("Bool: Expected intlit")
+| `List _ -> failwith ("List: Expected intlit")
+| `Null -> failwith ("Null: Expected intlit")
+| `Floatlit s -> failwith ("Floatlit ("^s^"): Expected intlit")
+| `Stringlit s -> failwith ("Stringlit ("^s^"): Expected intlit")
+| `Tuple _ -> failwith ("Tuple: Expected intlit")
+| `Variant _ -> failwith ("Variant: Expected intlit")
 
 let show_ni_category = function
   | A -> "A"
@@ -19,7 +64,8 @@ module Formula = struct
   let evaluate acclst equation variables =
       print_endline ("formula: "^equation);
       List.iter (fun (s,n) -> Hashtbl.replace acclst s (Calc.Num n)) variables;
-      let acc = Expr.expr equation in
+      let lexbuf = Lexing.from_string equation in
+      let acc = Mfcalc.tree Lexer.token lexbuf in
       print_endline ("AST = "^Expr.dumpast acc);
       match Expr.simplify acclst acc with
            | Calc.Num num -> num
@@ -39,9 +85,9 @@ module Config = struct
       |> member "exactPercentageMethod" in
     let steps = calc_method |> member "steps" |> to_list |> List.map (fun step ->
       {
-        step_number = step |> member "stepNumber" |> to_int;
-        name = step |> member "name" |> to_string;
-        equation = step |> member "equation" |> to_string;
+        step_number = step |> member "stepNumber" |> to_intlit;
+        name = step |> member "name" |> to_stringlit;
+        equation = step |> member "equation" |> to_stringlit;
         variables = try step |> member "variables" |> to_assoc 
                    |> List.map (fun (k, v) -> (k, to_string v)) with _ -> []
       } 
@@ -50,29 +96,12 @@ module Config = struct
 end
 
 module Calculator = struct
-  let period_multiplier = function
-    | Weekly -> 1.0
-    | TwoWeekly -> 2.0
-    | FourWeekly -> 4.0
-    | Monthly -> 13.0 /. 3.0
 
-  let round_to_pennies x =
-    let pennies = x *. 100.0 in
-    let third_decimal = Float.abs(pennies *. 10.0 -. Float.floor(pennies *. 10.0)) in
-    if third_decimal <= 0.5 then
-      Float.floor(pennies) /. 100.0
-    else
-      Float.ceil(pennies) /. 100.0
-
-  (* New rounding functions based on NI guidance *)
-  let round_p x =
-    Float.ceil x  (* Always round up to nearest pound *)
-
-  let round_p1 ~period x =
-    if period = 1.0 then
-      Float.round x  (* Round to nearest pound if period = 1 *)
-    else 
-      Float.ceil x   (* Round up if period > 1 *)
+  let period_multiplier = let open Expr in function
+    | Weekly -> tonum "52.0"
+    | TwoWeekly -> tonum "26.0"
+    | FourWeekly -> tonum "13.0"
+    | Monthly -> tonum "12.0"
 
   let contains eq p = try Str.search_forward (Str.regexp p) eq 0 >= 0 with _ -> false
 
@@ -80,13 +109,13 @@ module Calculator = struct
     Printf.printf "Executing step %d: %s\n" step.step_number step.equation;
     Printf.printf "Variables: %s\n" 
       (String.concat ", " 
-         (List.map (fun (k,v) -> Printf.sprintf "%s=%.2f" k v) variables));
+         (List.map (fun (k,v) -> Printf.sprintf "%s=%s" k (approx_num_fix 2 v)) variables));
     
     let evaluate_subexpression expr = Formula.evaluate acclst expr variables in
 
     let result = evaluate_subexpression step.equation in
 
-    Printf.printf "Step %d result: %.2f\n\n" step.step_number result;
+    Printf.printf "Step %d result: %s\n\n" step.step_number (approx_num_fix 2 result);
         {
           step_num = step.step_number;
           name = step.name;
@@ -96,11 +125,10 @@ module Calculator = struct
 
 let get_rates json category =
 
-  let to_float_safe json =
-    try to_float json
-    with Type_error _ -> float_of_int (to_int json) in
+  let to_float_safe json = Expr.tonum (to_numlit json) in
 
     let limits = json |> member "earningsLimits" |> member "weekly" in
+
     let earnings_limits = {
       lel = limits |> member "LEL" |> to_float_safe;
       pt = limits |> member "PT" |> to_float_safe;
@@ -117,7 +145,7 @@ let get_rates json category =
     |> member "categoryRates"
     |> member (show_ni_category category) in
 
-  print_endline (Yojson.Basic.to_string emp_rates);
+  print_endline (Yojson.Raw.to_string emp_rates);
 
   let er_rates = json 
     |> member "calculationFormulae" 
@@ -126,7 +154,7 @@ let get_rates json category =
     |> member "categoryRates"
     |> member (show_ni_category category) in
 
-  print_endline (Yojson.Basic.to_string er_rates);
+  print_endline (Yojson.Raw.to_string er_rates);
         
   let emp_band_d = emp_rates |> member "bandD" |> to_float_safe in
   let emp_band_e = emp_rates |> member "bandE" |> to_float_safe in
@@ -158,11 +186,11 @@ let get_rates json category =
       ("FUST", limits.fust); 
       ("IZUST", limits.izust);
       ("p", period);
-      ("wm", match freq with 
-        | Weekly -> 52.0 
-        | Monthly -> 12.0
-        | TwoWeekly -> 52.0
-        | FourWeekly -> 52.0)
+      ("wm", let open Expr in match freq with 
+        | Weekly -> tonum "52.0"
+        | Monthly -> tonum "12.0"
+        | TwoWeekly -> tonum "52.0"
+        | FourWeekly -> tonum "52.0")
     ] in
 
     let variables = base_variables gross_pay freq @ rates in
@@ -178,8 +206,8 @@ let get_rates json category =
   let final_equations = spec
     |> member "calculationFormulae" 
     |> member "exactPercentageMethod" in
-  let employee = final_equations |> member "employeeNICs" |> member "equation" |> to_string in
-  let employer = final_equations |> member "employerNICs" |> member "equation" |> to_string in
+  let employee = final_equations |> member "employeeNICs" |> member "equation" |> to_stringlit in
+  let employer = final_equations |> member "employerNICs" |> member "equation" |> to_stringlit in
   let employee_ni = Formula.evaluate acclst employee variables in
   let employer_ni = Formula.evaluate acclst employer variables in
 
@@ -187,11 +215,11 @@ let get_rates json category =
       steps = step_results;
       employee_ni;
       employer_ni;
-      total_ni = round_to_pennies (employee_ni +. employer_ni);
+      total_ni = Expr.roundPennies (employee_ni +/ employer_ni);
       bands = {
         up_to_lel = stepn "step1";
         lel_to_pt = stepn "step2";
-        pt_to_uel = stepn "step4" +. stepn "step5";
+        pt_to_uel = stepn "step4" +/ stepn "step5";
         above_uel = stepn "step6"
       }
     }
@@ -211,10 +239,10 @@ let calculate_ni_json ~category ~freq ~gross_pay =
 
   (* Access step results *)
   List.iter (fun (step:step_result) ->
-    Printf.printf "Step %d: %s = %.2f\n" 
+    Printf.printf "Step %d: %s = %s\n" 
       step.step_num 
       step.name 
-      step.result
+      (approx_num_fix 2 step.result)
   ) result.steps;
 
   result

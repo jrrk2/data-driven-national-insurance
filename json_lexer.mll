@@ -13,8 +13,8 @@ rule token = parse
   | "true" { TRUE }
   | "false" { FALSE }
   | "null" { NULL }
-  | ['0'-'9']+ as num { INT (int_of_string num) }
-  | ['0'-'9']+ '.' ['0'-'9']* as flt { FLT (float_of_string flt) }
+  | ['0'-'9']+ as num { INT num }
+  | ['0'-'9']+ '.' ['0'-'9']* as flt { FLT flt }
   | '"' [^'"']* '"' as str {
       STRING (String.sub str 1 (String.length str - 2))
     }

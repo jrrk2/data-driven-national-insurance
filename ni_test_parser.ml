@@ -7,8 +7,8 @@ let get_pcdata = function
 
 (* Helper function to safely extract float from string *)
 let parse_float str =
-  try float_of_string str
-  with _ -> 0.0
+  try Expr.tonum str
+  with _ -> Num.num_of_int 0
 
 (* Extract value from Data element *)
 let extract_data_value = function

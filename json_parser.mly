@@ -1,15 +1,15 @@
 %{
-  open Yojson.Basic
+  open Yojson.Raw
 %}
 
-%token <int> INT
-%token <float> FLT
+%token <string> INT
+%token <string> FLT
 %token <string> STRING
 %token TRUE FALSE NULL
 %token LBRACE RBRACE LBRACKET RBRACKET COLON COMMA 
 %token EOF
 %start main
-%type <Yojson.Basic.t> main
+%type <t> main
 
 %%
 
@@ -17,9 +17,9 @@ main:
   | value EOF { $1 }
 
 value:
-  | STRING { `String $1 }
-  | INT { `Int $1 }
-  | FLT { `Float $1 }
+  | STRING { `Stringlit $1 }
+  | INT { `Intlit $1 }
+  | FLT { `Floatlit $1 }
   | TRUE { `Bool true }
   | FALSE { `Bool false }
   | NULL { `Null }

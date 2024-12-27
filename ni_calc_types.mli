@@ -1,16 +1,17 @@
+open Num
 
 type pay_frequency = Weekly | TwoWeekly | FourWeekly | Monthly [@@deriving yojson]
 type ni_category = A | B | C | F | H | J | M | V | Z [@@deriving yojson]
 
 type token =
-  | NUMBER of float
+  | NUMBER of num
   | IDENT of string
   | PLUS | MINUS | TIMES | DIV | POWER | HASH
   | LPAREN | RPAREN
   | EOF
 
 type expr =
-  | Num of float
+  | Num of num
   | Var of string
   | BinOp of expr * token * expr
   | Power of expr * expr  
@@ -25,33 +26,33 @@ type calculation_step = {
 }
 
 type earnings_limits = {
-  lel: float;
-  pt: float;
-  st: float;
-  uel: float;
-  fust: float;
-  izust: float;
+  lel: num;
+  pt: num;
+  st: num;
+  uel: num;
+  fust: num;
+  izust: num;
 	
 }
 	
 type step_result = {
   step_num: int;
   name: string;
-  result: float;
-  variables_used: (string * float) list;
+  result: num;
+  variables_used: (string * num) list;
 }
 
 type ni_result = {
   steps: step_result list;
-  employee_ni: float;
-  employer_ni: float;
-  total_ni: float;
+  employee_ni: num;
+  employer_ni: num;
+  total_ni: num;
   bands: band_results;
 }
 
 and band_results = {
-  up_to_lel: float;
-  lel_to_pt: float;
-  pt_to_uel: float;
-  above_uel: float;
+  up_to_lel: num;
+  lel_to_pt: num;
+  pt_to_uel: num;
+  above_uel: num;
 }

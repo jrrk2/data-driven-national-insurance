@@ -1,9 +1,10 @@
+open Num
 
 (* The type of tokens. *)
 
 type expr =
   | Bool of bool
-  | Num of float
+  | Num of num
   | Neg of expr
   | Var of string
   | Add of expr * expr

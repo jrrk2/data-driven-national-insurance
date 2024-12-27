@@ -16,7 +16,8 @@
  (libraries 
    yojson
    xml-light
-   str)
+   str
+   num)
 )
  
 (env
